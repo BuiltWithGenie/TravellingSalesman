@@ -9,16 +9,14 @@ using .TSPUtils
 using .TSP
 using .TwoOpt
 
+# use Plotly's scattergeo traces to draw the cities and travel route on a map
 function draw_map(points, travel_route)
-    route_idx = sortperm(travel_route)
-    @show travel_route
-    @show route_idx
+    route_idx = sortperm(travel_route)   # numbers drawn on points
     trace_points = scattergeo(
         locationmode="ISO-3",
         lon=[point[2] for point in points],
         lat=[point[1] for point in points],
         text=[string(i) for i in route_idx],
-        # text=append(["1"],[string(c[2]) for c in connected_points]),
         textposition="bottom right",
         textfont=attr(family="Arial Black", size=18, color="blue"),
         mode="markers+text",
@@ -46,6 +44,7 @@ function draw_map(points, travel_route)
 
     return [trace_points, trace_line, trace_return]
 end
+
 cities = [
     (51.5074, -0.1278),   # London
     (40.7128, -74.0060),  # New York
@@ -55,25 +54,13 @@ cities = [
     (19.4326, -99.1332)   # Mexico City
 ]
 
+# initialize the map with a route
 init_map = draw_map(cities, [1, 2, 3, 4, 5, 6])
 
-
-# Create the layout
-mylayout = PlotlyBase.Layout(
-    geo=attr(
-        projection=attr(type="natural earth"),
-        showland=true, showcountries=true,
-        landcolor="#EAEAAE", countrycolor="#444444"
-    ),
-    margin=attr(l=20, r=20, t=20, b=20),
-    width=800, height=800,
-)
-
-myconfig = PlotlyBase.PlotConfig()
-
+# define a named model to handle map plot interactions
 @app ARModel begin
-    @out data = init_map
-    @out appLayout = PlotlyBase.Layout(
+    @out data = init_map                    # map plot data 
+    @out appLayout = PlotlyBase.Layout(     # map plot layout
         geo=attr(
             projection=attr(type="natural earth"),
             showland=true, showcountries=true,
@@ -83,21 +70,25 @@ myconfig = PlotlyBase.PlotConfig()
         autosize=true
     )
 
-    @out appConfig = myconfig
-    @private points = deepcopy(cities)
-    @in reset = false
-    @out max_reached = false
-    @out loading = false
+    @out appConfig = PlotlyBase.PlotConfig()
+    @private points = deepcopy(cities)    # list of city coordinates
+    @in reset = false                     # boolean for map reset button
+    @out loading = false                  # boolean for loading icon on button
+    @out max_reached = false              # algorithm switch when max_reached
+    # generate the data_selected, data_hover, data_click and data_relayout reactive
+    # variables that will hold the state values of plot interactions
     @mixin data::PlotlyEvents
 
+    # when clicking on the map, add a new point to the route and calculate
+    # the optimal path
     @onchange data_click begin
         loading = true
         println("plot clicked")
         @info data_click
+        # when clicking on an existing point, the data_click dict has a single key "points".
+        # Otherwise, the key is "cursor"
         selector = haskey(data_click, "points") ? "points" : "cursor"
-        @show data_click[selector]
 
-        max_reached = length(points) >= 8 ? true : false
         if haskey(data_click, "points")
             lat = data_click["points"][1]["lat"]
             lon = data_click["points"][1]["lon"]
@@ -106,6 +97,7 @@ myconfig = PlotlyBase.PlotConfig()
             lon = data_click["cursor"]["lon"]
         end
 
+        # remove a point when clicking withing a 5px radius
         closest, idx = TSPUtils.find_closest_point((lat, lon), points)
         if sum((closest .- (lat, lon)) .^ 2) < 5
             length(points) > 1 && deleteat!(points, idx)
@@ -115,21 +107,22 @@ myconfig = PlotlyBase.PlotConfig()
         end
 
         travel_route = []
+        max_reached = length(points) >= 8 ? true : false
         if !max_reached
+            # solve the TSP as a linear programming optimization problem
             D = TSPUtils.distance_matrix(points)
             X = TSP.solve_tsp(D)
-            connected_points = [(points[i], points[j]) for i in 1:size(X, 1), j in 1:size(X, 2) if X[i, j] == 1.0]
-
             travel_route = TSPUtils.get_travel_route(X)
         else
+            # use the heuristic TwoOpt algorithm
             initial_route = collect(1:length(points))
             travel_route = two_opt(points, initial_route)
         end
-        route_idx = sortperm(travel_route)
         data = draw_map(points, travel_route)
         loading = false
     end
 
+    # reset the map to its initial status
     @onchange reset begin
         points = deepcopy(cities)
         data = init_map
@@ -137,19 +130,20 @@ myconfig = PlotlyBase.PlotConfig()
 
 end
 
+# when the map is loaded, enable tracking of click events
 @mounted ARModel watchplots()
 
+# function to read the content of the html file into a string
 function app_jl_html()
     open("./app.jl.html") do f
         read(f, String)
     end
 end
 
+# initialize the named model, and define the page view at /
 route("/") do
     model = ARModel |> init |> handlers
     page(model, app_jl_html())
 end
 
-
-up()
 end
