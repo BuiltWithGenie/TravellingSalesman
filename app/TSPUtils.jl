@@ -12,7 +12,7 @@ end
 
 function distance_matrix(points)
     n = length(points)
-    @show typeof(points)
+    # @show typeof(points)
     dist_matrix = Matrix{Float64}(undef, n, n)
     for i in 1:n
         for j in 1:n

@@ -45,7 +45,7 @@ function draw_map(points, travel_route)
     return [trace_points, trace_line, trace_return]
 end
 
-cities = [
+const cities = [
     (51.5074, -0.1278),   # London
     (40.7128, -74.0060),  # New York
     (35.6895, 139.6917),  # Tokyo
@@ -58,8 +58,8 @@ cities = [
 init_map = draw_map(cities, [1, 2, 3, 4, 5, 6])
 
 # define a named model to handle map plot interactions
-@app ARModel begin
-    @out data = init_map                    # map plot data 
+@app begin
+    @out data = init_map                    # map plot data
     @out appLayout = PlotlyBase.Layout(     # map plot layout
         geo=attr(
             projection=attr(type="natural earth"),
@@ -75,16 +75,13 @@ init_map = draw_map(cities, [1, 2, 3, 4, 5, 6])
     @in reset = false                     # boolean for map reset button
     @out loading = false                  # boolean for loading icon on button
     @out max_reached = false              # algorithm switch when max_reached
-    # generate the data_selected, data_hover, data_click and data_relayout reactive
-    # variables that will hold the state values of plot interactions
-    @mixin data::PlotlyEvents
+    @in data_click = Dict{String, Any}()  # data from map click event
 
     # when clicking on the map, add a new point to the route and calculate
     # the optimal path
     @onchange data_click begin
         loading = true
-        println("plot clicked")
-        @info data_click
+
         # when clicking on an existing point, the data_click dict has a single key "points".
         # Otherwise, the key is "cursor"
         selector = haskey(data_click, "points") ? "points" : "cursor"
@@ -101,7 +98,6 @@ init_map = draw_map(cities, [1, 2, 3, 4, 5, 6])
         closest, idx = TSPUtils.find_closest_point((lat, lon), points)
         if sum((closest .- (lat, lon)) .^ 2) < 5
             length(points) > 1 && deleteat!(points, idx)
-            @info "Deleted $closest"
         else
             push!(points, (lat, lon))
         end
@@ -127,23 +123,11 @@ init_map = draw_map(cities, [1, 2, 3, 4, 5, 6])
         points = deepcopy(cities)
         data = init_map
     end
-
 end
 
 # when the map is loaded, enable tracking of click events
-@mounted ARModel watchplots()
+@mounted watchplots()
 
-# function to read the content of the html file into a string
-function app_jl_html()
-    open("./app.jl.html") do f
-        read(f, String)
-    end
-end
-
-# initialize the named model, and define the page view at /
-route("/") do
-    model = ARModel |> init |> handlers
-    page(model, app_jl_html())
-end
+@page("/", "app.jl.html")
 
 end
