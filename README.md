@@ -4,7 +4,7 @@ Visualize the travelling salesman problem with a map in which you can add and re
 
 The optimization problem is solved with JuMP for up to 9 stops, and the heuristic two-opt algorithm afterwards. The plot is implemented with PlotlyJS.
 
-Check out [this tutorial](https://learn.geniecloud.io/tutorials/written/map-charts/) to learn to add an interactive mapp to a Genie app.
+Check out [this tutorial](https://learn.geniecloud.io/tutorials/written/map-charts/) to learn to add an interactive map to a Genie app.
 
 ![](preview.gif)
 
