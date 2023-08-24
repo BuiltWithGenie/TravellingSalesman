@@ -1,7 +1,7 @@
 [deps]
 Cbc = "9961bab8-2fa3-5c5a-9d89-47fab24efd76"
-GLPK = "60bf3e95-4087-53dc-ae20-288a0d20c6a6"
 GenieFramework = "a59fdf5c-6bf0-4f5d-949c-a137c9e2f353"
+HiGHS = "87dc4568-4c63-4d18-b0c0-bb2238e4078b"
 JuMP = "4076af6c-e467-56ae-b986-b466b2749572"
 MathOptInterface = "b8f27783-ece8-5eb3-8dc8-9495eed66fee"
 PlotlyBase = "a03496cd-edff-5a9b-9e67-9cda94a718b5"
@@ -10,7 +10,7 @@ StippleUI = "a3c5d34a-b254-4859-a8fa-b86abb7e84a3"
 
 [compat]
 Cbc = "1.1"
-GLPK = "1.1"
+HiGHS = "1.5"
 JuMP = "1.11"
 MathOptInterface = "1.17"
 PlotlyBase = "0.8"
