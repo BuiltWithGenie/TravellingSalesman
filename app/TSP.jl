@@ -11,10 +11,9 @@ using Test
 using DelimitedFiles
 
 using JuMP
-using MathOptInterface
-const MOI = MathOptInterface
+import MathOptInterface as MOI
 
-using GLPK
+import HiGHS
 
 function all_subsets(x::Vector{T}) where {T}
     res = Vector{T}[[]]  # Vector of vectors
@@ -36,7 +35,7 @@ function solve_tsp(D)
     N <= 16 || error("N cannot be larger than 16 for memory safety")  # sanity check: `N` is not too large
 
     # Instantiate a model
-    mip = Model(GLPK.Optimizer)
+    mip = Model(HiGHS.Optimizer)
 
     # I. Create arc variables
     @variable(mip, X[1:N, 1:N], Bin)
