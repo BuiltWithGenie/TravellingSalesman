@@ -1,6 +1,6 @@
 name = "TravellingSalesman"
 imgname = "travel"
-version = "0.0.0"
+version = "0.0.1"
 
 [deps]
 Cbc = "9961bab8-2fa3-5c5a-9d89-47fab24efd76"
