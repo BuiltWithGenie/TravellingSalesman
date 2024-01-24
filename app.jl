@@ -45,6 +45,7 @@ function draw_map(points, travel_route)
     return [trace_points, trace_line, trace_return]
 end
 
+# initialize the map with a route
 const cities = [
     (51.5074, -0.1278),   # London
     (40.7128, -74.0060),  # New York
@@ -53,11 +54,9 @@ const cities = [
     (37.7749, -122.4194), # San Francisco
     (19.4326, -99.1332)   # Mexico City
 ]
-
-# initialize the map with a route
 init_map = draw_map(cities, [1, 2, 3, 4, 5, 6])
 
-# define a named model to handle map plot interactions
+# define the reactive code
 @app begin
     @out data = init_map                    # map plot data
     @out appLayout = PlotlyBase.Layout(     # map plot layout
